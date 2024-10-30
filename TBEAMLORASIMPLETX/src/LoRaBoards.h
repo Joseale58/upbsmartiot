@@ -60,7 +60,7 @@ typedef struct {
 } DevInfo_t;
 
 
-void setupBoards(bool disable_u8g2 = false);
+void setupBoards(bool disable_u8g2 = true);
 
 bool beginSDCard();
 

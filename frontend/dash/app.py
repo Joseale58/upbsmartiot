@@ -80,14 +80,22 @@ def datos_fecha(fecha):
     # Convertirmo a objeto fecha
     fecha_obj = pd.to_datetime(fecha).date()
 
-    # Filtrar datos de temperatura por la fecha seleccionada
-    temperatura_dia = [temp[1] for temp in temperatura if temp[0].date() == fecha_obj]
-    humedad_dia = [hum[1] for hum in humedad if hum[0].date() == fecha_obj]
     horas = pd.date_range(start=fecha, periods=24, freq='h')
 
-    #Para llenar aleatoriamentes los valores de temperatura y humedad
-    #temperatura_dia = np.random.uniform(15, 35, size=24)
-    #humedad_dia = np.random.uniform(40, 90, size=24)
+    # Filtrar datos de temperatura y humedad por la fecha seleccionada y convertir a Series (para que quede indexado por hora)
+    temperatura_series = pd.Series(
+        {temp[0]: temp[1] for temp in temperatura if temp[0].date() == fecha_obj}, 
+        index=horas
+    )
+    humedad_series = pd.Series(
+        {hum[0]: hum[1] for hum in humedad if hum[0].date() == fecha_obj}, 
+        index=horas
+    )
+
+    # Interpolar valores nulos
+    temperatura_dia = temperatura_series.interpolate(method='linear').to_list()
+    humedad_dia = humedad_series.interpolate(method='linear').to_list()
+
 
     return pd.DataFrame({'Hora': horas, 'Temperatura': temperatura_dia, 'Humedad': humedad_dia})
 

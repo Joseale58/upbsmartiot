@@ -5,17 +5,91 @@ import plotly.graph_objs as go
 import pandas as pd
 import datetime
 import numpy as np
+import psycopg2
+import sys
 
 # Inicializar la aplicación con un tema de Bootstrap
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Planta Dashboard"
 
-# Datos ficticios para temperatura y humedad
-def generar_datos_ficticios(fecha):
-    horas = pd.date_range(start=fecha, periods=24, freq='H')
-    temperatura = np.random.uniform(15, 35, size=24)
-    humedad = np.random.uniform(40, 90, size=24)
-    return pd.DataFrame({'Hora': horas, 'Temperatura': temperatura, 'Humedad': humedad})
+# PostgreSQL
+POSTGRES_HOST = "localhost"
+POSTGRES_PORT = "5432"
+POSTGRES_DB = "postgres"
+POSTGRES_USER = "root"
+POSTGRES_PASSWORD = "password"
+POSTGRES_TABLE_TEMPERATURE = "temperature_dummy"
+POSTGRES_TABLE_HUMIDITY = "humidity_dummy"
+
+
+# Consulta a PostgreSQL
+try:
+    
+    # Conexión a PostgreSQL
+    print("Conectando a PostgreSQL...")
+    postgres_conn = psycopg2.connect(
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
+        database=POSTGRES_DB,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD
+    )
+
+    cursor_pg = postgres_conn.cursor()
+
+    # Datos de temperatura y humedad
+    query_humidity = f"SELECT date_trunc('hour', timestamp) AS hour_interval, AVG(value) AS avg_value FROM {POSTGRES_TABLE_HUMIDITY} GROUP BY hour_interval ORDER BY hour_interval;"
+
+    query_temperature = f"SELECT date_trunc('hour', timestamp) AS hour_interval, AVG(value) AS avg_value FROM {POSTGRES_TABLE_TEMPERATURE} GROUP BY hour_interval ORDER BY hour_interval;"
+
+    query_last_temperature = f"SELECT date_trunc('hour', timestamp) AS hour_interval, value FROM {POSTGRES_TABLE_TEMPERATURE} ORDER BY hour_interval DESC LIMIT 1;"
+
+    query_last_humidity = f"SELECT date_trunc('hour', timestamp) AS hour_interval, value FROM {POSTGRES_TABLE_HUMIDITY} ORDER BY hour_interval DESC LIMIT 1;"
+
+    cursor_pg.execute(query_humidity)
+    humedad = cursor_pg.fetchall()
+
+    cursor_pg.execute(query_temperature)
+    temperatura = cursor_pg.fetchall()
+
+    cursor_pg.execute(query_last_temperature)
+    last_temperature = cursor_pg.fetchall()
+
+    cursor_pg.execute(query_last_humidity)
+    last_humidity = cursor_pg.fetchall()
+
+    # Cerrar el cursor y la conexión
+    cursor_pg.close()
+    postgres_conn.close()
+
+except Exception as e:
+    print(f"Ha ocurrido un error: {e}")
+    sys.exit(1)
+
+finally:
+    # Cerrar cursores y conexiones
+    if cursor_pg:
+        cursor_pg.close()
+    if postgres_conn:
+        postgres_conn.close()
+    print("Conexiones cerradas.")
+
+# Seleccionar datos por fecha de calendario
+def datos_fecha(fecha):
+
+    # Convertirmo a objeto fecha
+    fecha_obj = pd.to_datetime(fecha).date()
+
+    # Filtrar datos de temperatura por la fecha seleccionada
+    temperatura_dia = [temp[1] for temp in temperatura if temp[0].date() == fecha_obj]
+    humedad_dia = [hum[1] for hum in humedad if hum[0].date() == fecha_obj]
+    horas = pd.date_range(start=fecha, periods=24, freq='h')
+
+    #Para llenar aleatoriamentes los valores de temperatura y humedad
+    #temperatura_dia = np.random.uniform(15, 35, size=24)
+    #humedad_dia = np.random.uniform(40, 90, size=24)
+
+    return pd.DataFrame({'Hora': horas, 'Temperatura': temperatura_dia, 'Humedad': humedad_dia})
 
 # Layout de la aplicación
 tabs = dbc.Tabs([
@@ -57,19 +131,21 @@ tabs = dbc.Tabs([
     dbc.Tab(label='Visualización de Datos', children=[
         dbc.Container([
             html.H1("Visualización de Temperatura y Humedad", className="mt-4"),
+            html.Hr(),
+            html.H4("Últimas medidas registras para temperatura: " + last_temperature[0][0].strftime("%Y-%m-%d %H") + " horas y humedad: " + last_humidity[0][0].strftime("%Y-%m-%d %H") + " horas", className="mt-4"),
+            html.Div(id='output-gauges', className='mt-4'),
             dcc.DatePickerSingle(
                 id='date-picker',
                 date=datetime.date.today(),
                 className='mt-3'
             ),
-            html.Div(id='output-gauges', className='mt-4'),
             dcc.Graph(id='time-series-graph-temperatura', className='mt-4'),
             dcc.Graph(id='time-series-graph-humedad', className='mt-4')
         ])
     ]),
 
     # Pestaña 3: Vacía por ahora
-    dbc.Tab(label='Pestaña Vacía', children=[
+    dbc.Tab(label='Predicciones futuras', children=[
         dbc.Container([
             html.H1("Pestaña Vacía", className="mt-4"),
             html.P("Contenido próximamente...")
@@ -92,24 +168,54 @@ app.layout = dbc.Container([
 )
 def actualizar_visualizacion(fecha_seleccionada):
     # Generar datos ficticios para la fecha seleccionada
-    datos = generar_datos_ficticios(fecha_seleccionada)
+    datos = datos_fecha(fecha_seleccionada)
+
+    temperatura_media = datos['Temperatura'].mean()
+    humedad_media = datos['Humedad'].mean()
+
+    # Definir color del indicador de temperatura basado en el valor
+    if temperatura_media < 15:
+        color_temperatura = "blue"  # Temperatura baja
+    elif 15 <= temperatura_media < 25:
+        color_temperatura = "green"  # Temperatura óptima
+    elif 25 <= temperatura_media < 35:
+        color_temperatura = "yellow"  # Temperatura alta
+    else:
+        color_temperatura = "red"  # Temperatura muy alta
+
+    # Definir color del indicador de humedad basado en el valor
+    if humedad_media < 30:
+        color_humedad = "lightblue"  # Humedad muy baja
+    elif 30 <= humedad_media < 60:
+        color_humedad = "green"  # Humedad óptima
+    elif 60 <= humedad_media < 80:
+        color_humedad = "yellow"  # Humedad alta
+    else:
+        color_humedad = "red"  # Humedad muy alta
+
 
     # Crear gráficos de gauge para temperatura y humedad
     gauge_temperatura = dcc.Graph(
         figure=go.Figure(go.Indicator(
             mode="gauge+number",
-            value=datos['Temperatura'].mean(),
-            title={'text': "Temperatura Media (°C)"},
-            gauge={'axis': {'range': [0, 50]}}
+            value=last_temperature[0][1],
+            title={'text': "Temperatura (°C)"},
+            gauge={
+            'axis': {'range': [0, 50]},
+            'bar': {'color': color_temperatura}  # Color dinámico del indicador
+            }
         )), style={'display': 'inline-block', 'width': '45%'}
     )
 
     gauge_humedad = dcc.Graph(
         figure=go.Figure(go.Indicator(
             mode="gauge+number",
-            value=datos['Humedad'].mean(),
-            title={'text': "Humedad Media (%)"},
-            gauge={'axis': {'range': [0, 100]}}
+            value=last_humidity[0][1],
+            title={'text': "Humedad (%)"},
+            gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': color_humedad}  # Color dinámico del indicador
+            }
         )), style={'display': 'inline-block', 'width': '45%'}
     )
 

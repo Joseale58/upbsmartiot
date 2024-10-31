@@ -99,6 +99,39 @@ def datos_fecha(fecha):
 
     return pd.DataFrame({'Hora': horas, 'Temperatura': temperatura_dia, 'Humedad': humedad_dia})
 
+
+dato_prediccion = datos_fecha(datetime.date.today())
+
+# Crear figura de predicción de temperatura
+figura_serie_tiempo_temperatura_prediccion = go.Figure()
+figura_serie_tiempo_temperatura_prediccion.add_trace(go.Scatter(
+    x=dato_prediccion['Hora'],
+    y=dato_prediccion['Temperatura'],
+    mode='lines',
+    name='Predicción Temperatura (°C)'
+))
+figura_serie_tiempo_temperatura_prediccion.update_layout(
+    title="Predicción - Temperatura para Mañana",
+    xaxis_title="Hora",
+    yaxis_title="Temperatura (°C)",
+    template="plotly_white"
+)
+
+# Crear figura de predicción de humedad
+figura_serie_tiempo_humedad_prediccion = go.Figure()
+figura_serie_tiempo_humedad_prediccion.add_trace(go.Scatter(
+    x=dato_prediccion['Hora'],
+    y=dato_prediccion['Humedad'],
+    mode='lines',
+    name='Predicción Humedad (%)'
+))
+figura_serie_tiempo_humedad_prediccion.update_layout(
+    title="Predicción - Humedad para Mañana",
+    xaxis_title="Hora",
+    yaxis_title="Humedad (%)",
+    template="plotly_white"
+)
+
 # Layout de la aplicación
 tabs = dbc.Tabs([
     # Pestaña 1: Información de la planta
@@ -145,9 +178,10 @@ tabs = dbc.Tabs([
             dcc.DatePickerSingle(
                 id='date-picker',
                 date=datetime.date.today(),
+                max_date_allowed=datetime.date.today(),
                 className='mt-3'
             ),
-            dcc.Graph(id='time-series-graph-temperatura', className='mt-4'),
+            dcc.Graph(id='time-series-graph-temperatura',className='mt-4'),
             dcc.Graph(id='time-series-graph-humedad', className='mt-4')
         ])
     ]),
@@ -155,8 +189,10 @@ tabs = dbc.Tabs([
     # Pestaña 3: Vacía por ahora
     dbc.Tab(label='Predicciones futuras', children=[
         dbc.Container([
-            html.H1("Pestaña Vacía", className="mt-4"),
-            html.P("Contenido próximamente...")
+            html.H1("Predicciones para mañana", className="mt-4"),
+            html.Hr(),
+            dcc.Graph(id='time-series-graph-temperatura-prediction', figure=figura_serie_tiempo_temperatura_prediccion, className='mt-4',),
+            dcc.Graph(id='time-series-graph-humedad-prediction', figure=figura_serie_tiempo_humedad_prediccion ,className='mt-4')
         ])
     ])
 ])
@@ -178,25 +214,25 @@ def actualizar_visualizacion(fecha_seleccionada):
     # Generar datos ficticios para la fecha seleccionada
     datos = datos_fecha(fecha_seleccionada)
 
-    temperatura_media = datos['Temperatura'].mean()
-    humedad_media = datos['Humedad'].mean()
+    ultima_temperatura = last_temperature[0][1]
+    ultima_humedad = last_humidity[0][1]
 
     # Definir color del indicador de temperatura basado en el valor
-    if temperatura_media < 15:
+    if ultima_temperatura < 15:
         color_temperatura = "blue"  # Temperatura baja
-    elif 15 <= temperatura_media < 25:
+    elif 15 <= ultima_temperatura < 25:
         color_temperatura = "green"  # Temperatura óptima
-    elif 25 <= temperatura_media < 35:
+    elif 25 <= ultima_temperatura < 35:
         color_temperatura = "yellow"  # Temperatura alta
     else:
         color_temperatura = "red"  # Temperatura muy alta
 
     # Definir color del indicador de humedad basado en el valor
-    if humedad_media < 30:
+    if ultima_humedad < 30:
         color_humedad = "lightblue"  # Humedad muy baja
-    elif 30 <= humedad_media < 60:
+    elif 30 <= ultima_humedad < 60:
         color_humedad = "green"  # Humedad óptima
-    elif 60 <= humedad_media < 80:
+    elif 60 <= ultima_humedad < 80:
         color_humedad = "yellow"  # Humedad alta
     else:
         color_humedad = "red"  # Humedad muy alta
@@ -206,7 +242,7 @@ def actualizar_visualizacion(fecha_seleccionada):
     gauge_temperatura = dcc.Graph(
         figure=go.Figure(go.Indicator(
             mode="gauge+number",
-            value=last_temperature[0][1],
+            value=ultima_temperatura,
             title={'text': "Temperatura (°C)"},
             gauge={
             'axis': {'range': [0, 50]},
@@ -218,7 +254,7 @@ def actualizar_visualizacion(fecha_seleccionada):
     gauge_humedad = dcc.Graph(
         figure=go.Figure(go.Indicator(
             mode="gauge+number",
-            value=last_humidity[0][1],
+            value=ultima_humedad,
             title={'text': "Humedad (%)"},
             gauge={
             'axis': {'range': [0, 100]},

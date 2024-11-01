@@ -1,12 +1,11 @@
 import psycopg2
 import sys
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.model_selection import train_test_split
+from sklearn import metrics
 from sklearn.ensemble import RandomForestRegressor
 from skforecast.ForecasterAutoreg import ForecasterAutoreg
-from skforecast.model_selection import grid_search_forecaster
 
 # PostgreSQL
 POSTGRES_HOST = "localhost"
@@ -17,6 +16,7 @@ POSTGRES_PASSWORD = "password"
 POSTGRES_TABLE_TEMPERATURE = "temperature_dummy"
 POSTGRES_TABLE_HUMIDITY = "humidity_dummy"
 POSTGRES_TABLE_PREDICTION = "predictions"
+POSTGRES_TABLE_MODEL_ACCURACY = "model_accuracy"
 
 try:
     # Conexión a PostgreSQL
@@ -52,9 +52,23 @@ finally:
         postgres_conn.close()
     print("Conexiones cerradas.")
 
+
+
+
+
+
+
+
+
 # --- Preprocesamiento de datos ---
 
-#Temperatura
+
+
+
+
+
+
+# --- Temperatura ---
 
 df_temperatura = pd.DataFrame(temperatura, columns=["hour", "temperature"])
 
@@ -85,20 +99,50 @@ df_completo_temp['temperature'] = df_completo_temp['temperature'].interpolate(me
 # Si quedan valores nulos al principio o al final, se pueden rellenar con ffill o bfill
 df_completo_temp['temperature'] = df_completo_temp['temperature'].ffill().bfill()
 
+
+# --- División de datos en entrenamiento y prueba ---
+
+# Dividir el 70% de los datos para entrenamiento y el 30% para prueba
+split_index = int(0.7 * len(df_completo_temp))
+train_data = df_completo_temp['temperature'][:split_index]
+test_data = df_completo_temp['temperature'][split_index:]
+
+
 # --- Predicción de valores futuros con Skforecast ---
 
 # Crear y entrenar el modelo ForecasterAutoreg con RandomForestRegressor
 # Ajustar el valor de lags para que sea menor que el tamaño de la serie
-total_observations = len(df_completo_temp)
-lags = min(24, total_observations - 1)  # Ajustar el valor de lags para que no supere el número de observaciones
+total_observations = len(train_data)
+
+# Los lags, representan, la cantidad de valores pasados de la serie que se van a utilizar para predecir el siguiente valor. En este caso se tiene como minimo 24 (debe haber un día de datos) y máximo el total de observaciones menos 1
+lags = max(24, total_observations - 1)  
 
 forecaster = ForecasterAutoreg(
                 regressor=RandomForestRegressor(random_state=123),
                 lags=lags
              )
 
+# Entrenar el modelo con datos de prueba
+forecaster.fit(y=train_data)
+
+# --- Evaluación del modelo en el conjunto de prueba ---
+
+# Realizar predicciones en el conjunto de prueba (tantos pasos como el tamaño del conjunto de prueba)
+steps = len(test_data)
+predictions = forecaster.predict(steps=steps)
+
+# Calcular métricas de error
+mae_temp = metrics.mean_absolute_error(test_data, predictions)
+mse_temp = np.mean((test_data - predictions) ** 2)  # MSE calculado manualmente
+rmse_temp = np.sqrt(mse_temp)
+mape_temp = np.mean(np.abs((test_data - predictions) / test_data)) * 100
+
+
+# --- Predicción futura ---
+
+
+# Se reentrena al modelo incluyendo los últimos datos de humedad
 forecaster.fit(y=df_completo_temp['temperature'])
-print(forecaster)
 
 # Definir el número de pasos para predecir
 steps = 24
@@ -113,15 +157,17 @@ df_futuro_temp = pd.DataFrame({'hour': horas_futuras, 'predicted_temperature': p
 print(df_futuro_temp)
 
 
-# Calcular y mostrar el Error Cuadrático Medio (MSE) para las predicciones
-mse = mean_squared_error(df_completo_temp['temperature'].iloc[-steps:], predictions)
-print(f"Error Cuadrático Medio (MSE): {mse}")
-print("Fin del modelo")
+print("Fin del modelo de temperatura")
 
 
-# Humedad
 
-# Suponiendo que ya tienes los datos de la variable `humedad`
+
+
+
+
+
+# --- Humedad ---
+
 df_humedad = pd.DataFrame(humedad, columns=["hour", "humidity"])
 
 # Crear una columna de 'fecha' para agrupar por día
@@ -151,12 +197,21 @@ df_completo_hum['humidity'] = df_completo_hum['humidity'].interpolate(method='li
 # Si quedan valores nulos al principio o al final, se pueden rellenar con ffill o bfill
 df_completo_hum['humidity'] = df_completo_hum['humidity'].ffill().bfill()
 
-# --- Predicción de valores futuros ---
+
+
+# --- División de datos en entrenamiento y prueba ---
+
+# Dividir el 70% de los datos para entrenamiento y el 30% para prueba
+split_index = int(0.7 * len(df_completo_hum))
+train_data = df_completo_hum['humidity'][:split_index]
+test_data = df_completo_hum['humidity'][split_index:]
+
+
 # --- Predicción de valores futuros con Skforecast ---
 
 # Crear y entrenar el modelo ForecasterAutoreg con RandomForestRegressor
 # Ajustar el valor de lags para que sea menor que el tamaño de la serie
-total_observations = len(df_completo_hum)
+total_observations = len(train_data)
 lags = min(24, total_observations - 1)  # Ajustar el valor de lags para que no supere el número de observaciones
 
 forecaster = ForecasterAutoreg(
@@ -164,8 +219,28 @@ forecaster = ForecasterAutoreg(
                 lags=lags
              )
 
+
+forecaster.fit(y=train_data)
+
+# --- Evaluación del modelo en el conjunto de prueba ---
+
+# Realizar predicciones en el conjunto de prueba (tantos pasos como el tamaño del conjunto de prueba)
+steps = len(test_data)
+predictions = forecaster.predict(steps=steps)
+
+# Calcular métricas de error
+mae_hum = metrics.mean_absolute_error(test_data, predictions)
+mse_hum = np.mean((test_data - predictions) ** 2)  # MSE calculado manualmente
+rmse_hum = np.sqrt(mse_temp)
+mape_hum = np.mean(np.abs((test_data - predictions) / test_data)) * 100
+
+
+
+
+# --- Predicción futura ---
+
+# Se reentrena al modelo incluyendo los últimos datos de humedad
 forecaster.fit(y=df_completo_hum['humidity'])
-print(forecaster)
 
 # Definir el número de pasos para predecir
 steps = 24
@@ -179,10 +254,7 @@ horas_futuras = pd.date_range(start=ultima_hora + timedelta(hours=1), periods=st
 df_futuro_hum = pd.DataFrame({'hour': horas_futuras, 'predicted_humidity': predictions})
 print(df_futuro_hum)
 
-# Calcular y mostrar el Error Cuadrático Medio (MSE) para las predicciones
-mse = mean_squared_error(df_completo_hum['humidity'].iloc[-steps:], predictions)
-print(f"Error Cuadrático Medio (MSE): {mse}")
-print("Fin del modelo")
+print("Fin del modelo de temperatura")
 
 
 df_futuro_completo = pd.merge(df_futuro_temp, df_futuro_hum, on="hour", how="inner")
@@ -201,6 +273,11 @@ try:
     
     cursor_pg = postgres_conn.cursor()
 
+    # Cada vez que se hace una predicción se limpiar la tabla de predicciones
+    truncate_query = f"TRUNCATE TABLE {POSTGRES_TABLE_PREDICTION};"
+    cursor_pg.execute(truncate_query)
+
+
     for _, row in df_futuro_completo.iterrows():
         time_index = row['hour']
         temp = row['predicted_temperature']
@@ -209,8 +286,18 @@ try:
         insert_temp_query = f"INSERT INTO {POSTGRES_TABLE_PREDICTION} (temperature, humidity, timestamp) VALUES (%s,%s,%s)"
         cursor_pg.execute(insert_temp_query, (temp, hum, time_index))
 
-        # Guardar los cambios definitivamente
-        postgres_conn.commit()
+
+    model_accuracy_temp_query = f"INSERT INTO {POSTGRES_TABLE_MODEL_ACCURACY} (model, mae, mape, mse, rmse, timestamp) VALUES (%s,%s,%s,%s,%s,%s)"
+
+    cursor_pg.execute(model_accuracy_temp_query, ("Temperatura : RandomForestRegressor", mae_temp, mape_temp, mse_temp, rmse_temp, datetime.now()))
+
+    model_accuracy_hum_query = f"INSERT INTO {POSTGRES_TABLE_MODEL_ACCURACY} (model, mae, mape, mse, rmse, timestamp) VALUES (%s,%s,%s,%s,%s,%s)"
+
+    cursor_pg.execute(model_accuracy_hum_query, ("Humedad : RandomForestRegressor", mae_hum, mape_hum, mse_hum, rmse_hum, datetime.now()))
+
+    # Guardar los cambios definitivamente
+    
+    postgres_conn.commit()
 
 
 except Exception as e:

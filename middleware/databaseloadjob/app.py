@@ -6,7 +6,6 @@ import sys
 # Configuraciones de la conexión
 # CrateDB
 CRATE_URL = "http://10.38.32.137:8083"
-CRATE_QUERY = "SELECT time_index, temp, humedad FROM doc.etvariables WHERE entity_id = 'Joselito' LIMIT 100;"
 
 # PostgreSQL
 POSTGRES_HOST = "localhost"
@@ -18,14 +17,6 @@ POSTGRES_TABLE_TEMPERATURE = "temperature"
 POSTGRES_TABLE_HUMIDITY = "humidity"
 
 try:
-    # Conexión a CrateDB
-    print("Conectando a CrateDB...")
-    crate_conn = client.connect(CRATE_URL, error_trace=True)
-    cursor_crate = crate_conn.cursor()
-    cursor_crate.execute(CRATE_QUERY)
-    crate_data = cursor_crate.fetchall()
-    
-    print(f"Datos capturados de CrateDB: {len(crate_data)} filas")
 
     # Conexión a PostgreSQL
     print("Conectando a PostgreSQL...")
@@ -36,7 +27,35 @@ try:
         user=POSTGRES_USER,
         password=POSTGRES_PASSWORD
     )
+
+    # Obtener la última fecha de los datos en PostgreSQL
+    
     cursor_pg = postgres_conn.cursor()
+    last_date_temp_query = f"SELECT MAX(timestamp) FROM {POSTGRES_TABLE_TEMPERATURE};"
+    cursor_pg.execute(last_date_temp_query)
+    last_date_temp = cursor_pg.fetchone()[0]
+
+    last_date_humidity_query = f"SELECT MAX(timestamp) FROM {POSTGRES_TABLE_HUMIDITY};"
+    cursor_pg.execute(last_date_humidity_query)
+    last_date_humidity = cursor_pg.fetchone()[0]
+
+    if last_date_temp < last_date_humidity:
+        last_date = last_date_temp
+    else:
+        last_date = last_date_humidity
+
+
+    # Conexión a CrateDB
+    print("Conectando a CrateDB...")
+    crate_conn = client.connect(CRATE_URL, error_trace=True)
+    cursor_crate = crate_conn.cursor()
+    crate_query = crate_query = f""" SELECT time_index, temp, humedad  FROM doc.etvariables WHERE entity_id = 'Joselito' AND time_index >= '{last_date}' LIMIT 10000; """
+    cursor_crate.execute(crate_query)
+    crate_data = cursor_crate.fetchall()
+    
+    print(f"Datos capturados de CrateDB: {len(crate_data)} filas")
+
+    
 
     # Inserción de los datos en la tabla PostgreSQL
     print("Insertando datos en PostgreSQL...")

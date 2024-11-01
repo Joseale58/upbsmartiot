@@ -20,6 +20,7 @@ POSTGRES_USER = "root"
 POSTGRES_PASSWORD = "password"
 POSTGRES_TABLE_TEMPERATURE = "temperature_dummy"
 POSTGRES_TABLE_HUMIDITY = "humidity_dummy"
+POSTGRES_TABLE_PREDICTION = "predictions"
 
 
 # Consulta a PostgreSQL
@@ -42,6 +43,8 @@ try:
 
     query_temperature = f"SELECT date_trunc('hour', timestamp) AS hour_interval, AVG(value) AS avg_value FROM {POSTGRES_TABLE_TEMPERATURE} GROUP BY hour_interval ORDER BY hour_interval;"
 
+    query_prediction = f"SELECT date_trunc('hour', timestamp) AS hour_interval, temperature, humidity FROM {POSTGRES_TABLE_PREDICTION} ORDER BY hour_interval;"
+
     query_last_temperature = f"SELECT date_trunc('hour', timestamp) AS hour_interval, value FROM {POSTGRES_TABLE_TEMPERATURE} ORDER BY hour_interval DESC LIMIT 1;"
 
     query_last_humidity = f"SELECT date_trunc('hour', timestamp) AS hour_interval, value FROM {POSTGRES_TABLE_HUMIDITY} ORDER BY hour_interval DESC LIMIT 1;"
@@ -51,6 +54,13 @@ try:
 
     cursor_pg.execute(query_temperature)
     temperatura = cursor_pg.fetchall()
+
+    cursor_pg.execute(query_prediction)
+    prediction = cursor_pg.fetchall()
+    # Separar las tuplas en tres listas: horas, temperaturas y humedades
+    horas_prediccion = [prediccion[0] for prediccion in prediction]
+    temperaturas_prediccion = [prediccion[1] for prediccion in prediction]
+    humedades_prediccion = [prediccion[2] for prediccion in prediction]
 
     cursor_pg.execute(query_last_temperature)
     last_temperature = cursor_pg.fetchall()
@@ -105,13 +115,13 @@ dato_prediccion = datos_fecha(datetime.date.today())
 # Crear figura de predicción de temperatura
 figura_serie_tiempo_temperatura_prediccion = go.Figure()
 figura_serie_tiempo_temperatura_prediccion.add_trace(go.Scatter(
-    x=dato_prediccion['Hora'],
-    y=dato_prediccion['Temperatura'],
+    x=horas_prediccion,
+    y=temperaturas_prediccion,
     mode='lines',
     name='Predicción Temperatura (°C)'
 ))
 figura_serie_tiempo_temperatura_prediccion.update_layout(
-    title="Predicción - Temperatura para Mañana",
+    title="Predicción - temperatura para mañana",
     xaxis_title="Hora",
     yaxis_title="Temperatura (°C)",
     template="plotly_white"
@@ -120,13 +130,13 @@ figura_serie_tiempo_temperatura_prediccion.update_layout(
 # Crear figura de predicción de humedad
 figura_serie_tiempo_humedad_prediccion = go.Figure()
 figura_serie_tiempo_humedad_prediccion.add_trace(go.Scatter(
-    x=dato_prediccion['Hora'],
-    y=dato_prediccion['Humedad'],
+    x=horas_prediccion,
+    y=humedades_prediccion,
     mode='lines',
     name='Predicción Humedad (%)'
 ))
 figura_serie_tiempo_humedad_prediccion.update_layout(
-    title="Predicción - Humedad para Mañana",
+    title="Predicción - humedad para mañana",
     xaxis_title="Hora",
     yaxis_title="Humedad (%)",
     template="plotly_white"

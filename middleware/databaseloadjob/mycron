@@ -1,0 +1,2 @@
+# Ejecuta un script cada hora
+0 * * * * /app/script.sh >> /var/log/cron.log 2>&1

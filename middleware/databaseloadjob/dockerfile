@@ -1,0 +1,30 @@
+# databaseloadjob/Dockerfile
+FROM python:3.8
+
+# Establece el directorio de trabajo, que es el directorio donde se ejecutarán los comandos, a partir de este punto
+WORKDIR /app
+
+# Copia todos los archivos desde el directorio actual al directorio de trabajo en el contenedor
+COPY . .
+
+# Copia el archivo de cron al directorio /etc/cron.d/
+COPY mycron /etc/cron.d/mycron
+
+#Instala las dependencias necesarias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Da permisos de ejecución al script
+RUN chmod 777 script.sh
+
+# Configura permisos de cron
+RUN chmod 777 /etc/cron.d/mycron
+
+# Actualiza repositorios e instala cron
+RUN apt-get update && \
+    apt-get install -y cron &&
+
+# Agrega el cron a la lista de crontabs
+RUN crontab /etc/cron.d/mycron
+
+# Ejecuta la aplicación con python3
+CMD cron && python app.py

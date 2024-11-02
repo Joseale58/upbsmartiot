@@ -63,6 +63,7 @@ services:
     ports:
       - "4200:4200"
       - "4300:4300"
+      - "5432:5432"
     command: crate -Cauth.host_based.enabled=false  -Ccluster.name=democluster -Chttp.cors.enabled=true -Chttp.cors.allow-origin="*"
     environment:
       - CRATE_HEAP_SIZE=512m 

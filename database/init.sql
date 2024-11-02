@@ -1,6 +1,3 @@
-create database postgres
-    with owner root;
-
 comment on database postgres is 'default administrative connection database';
 
 create sequence public.predictions_id_seq

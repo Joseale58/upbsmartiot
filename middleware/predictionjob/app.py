@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestRegressor
 from skforecast.ForecasterAutoreg import ForecasterAutoreg
 
 # PostgreSQL
-POSTGRES_HOST = "localhost"
+POSTGRES_HOST = "postgres"
 POSTGRES_PORT = "5432"
 POSTGRES_DB = "postgres"
 POSTGRES_USER = "root"

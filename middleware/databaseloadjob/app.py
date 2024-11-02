@@ -8,7 +8,7 @@ import sys
 CRATE_URL = "db-crate"
 
 # PostgreSQL
-POSTGRES_HOST = "localhost"
+POSTGRES_HOST = "postgres"
 POSTGRES_PORT = "5432"
 POSTGRES_DB = "postgres"
 POSTGRES_USER = "root"

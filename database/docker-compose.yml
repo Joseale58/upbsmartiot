@@ -13,29 +13,6 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
     
-
-  databaseloadjob:
-    build:
-      context: ./databaseloadjob/
-      dockerfile: Dockerfile
-    container_name: databaseloadjob
-    depends_on:
-      - serviceName: database
-    ports:
-      - "8081:80"
-    restart: always
-
-  predictionjob:
-    build:
-      context: ./predictionjob/
-      dockerfile: Dockerfile
-    container_name: predictionjob
-    depends_on:
-      - serviceName: databaseloadjob
-    ports:
-      - "8082:80"
-    restart: always
-
 networks:
   default:
     ipam:

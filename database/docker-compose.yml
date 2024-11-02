@@ -1,5 +1,19 @@
 services:
 
+  database:
+    image: postgres
+    container_name: iotfinal
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports: 
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+    
+
   databaseloadjob:
     build:
       context: ./databaseloadjob/

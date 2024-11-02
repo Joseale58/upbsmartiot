@@ -21,7 +21,7 @@ RUN chmod 777 /etc/cron.d/mycron
 
 # Actualiza repositorios e instala cron
 RUN apt-get update && \
-    apt-get install -y cron &&
+    apt-get install -y cron
 
 # Agrega el cron a la lista de crontabs
 RUN crontab /etc/cron.d/mycron

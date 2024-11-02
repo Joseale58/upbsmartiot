@@ -9,7 +9,7 @@ from skforecast.ForecasterAutoreg import ForecasterAutoreg
 
 # PostgreSQL
 POSTGRES_HOST = "postgres"
-POSTGRES_PORT = "5432"
+POSTGRES_PORT = "9100"
 POSTGRES_DB = "postgres"
 POSTGRES_USER = "root"
 POSTGRES_PASSWORD = "password"

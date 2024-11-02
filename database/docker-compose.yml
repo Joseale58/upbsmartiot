@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: postgres
     ports: 
-      - "9100:9100"
+      - "9100:5432"
     networks:
       - backend_default
     volumes:

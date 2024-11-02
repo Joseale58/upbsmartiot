@@ -5,7 +5,7 @@ import sys
 
 # Configuraciones de la conexión
 # CrateDB
-CRATE_URL = "http://10.38.32.137:8083"
+CRATE_URL = "db-crate"
 
 # PostgreSQL
 POSTGRES_HOST = "localhost"

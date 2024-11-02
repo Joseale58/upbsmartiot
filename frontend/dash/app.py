@@ -20,7 +20,7 @@ POSTGRES_USER = "root"
 POSTGRES_PASSWORD = "password"
 POSTGRES_TABLE_TEMPERATURE = "temperature_dummy"
 POSTGRES_TABLE_HUMIDITY = "humidity_dummy"
-POSTGRES_TABLE_PREDICTION = "predictions"
+POSTGRES_TABLE_PREDICTION = "prediction"
 
 
 # Consulta a PostgreSQL

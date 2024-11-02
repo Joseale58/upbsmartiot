@@ -15,7 +15,7 @@ POSTGRES_USER = "root"
 POSTGRES_PASSWORD = "password"
 POSTGRES_TABLE_TEMPERATURE = "temperature_dummy"
 POSTGRES_TABLE_HUMIDITY = "humidity_dummy"
-POSTGRES_TABLE_PREDICTION = "predictions"
+POSTGRES_TABLE_PREDICTION = "prediction"
 POSTGRES_TABLE_MODEL_ACCURACY = "model_accuracy"
 
 try:

@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: ./dash/
+      dockerfile: Dockerfile
+    container_name: frontend
+    networks:
+      - backend_default
+    ports:
+      - "8080:80"
+    restart: always
+    
+networks:
+  backend_default:
+    external: true

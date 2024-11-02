@@ -64,7 +64,7 @@ services:
       - "4200:4200"
     command: crate -Cauth.host_based.enabled=false  -Ccluster.name=democluster -Chttp.cors.enabled=true -Chttp.cors.allow-origin="*"
     environment:
-      - CRATE_HEAP_SIZE=2g
+      - CRATE_HEAP_SIZE=512m 
     volumes:
       - crate-db:/data
 

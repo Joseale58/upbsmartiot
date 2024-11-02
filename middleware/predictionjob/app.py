@@ -73,6 +73,7 @@ finally:
 df_temperatura = pd.DataFrame(temperatura, columns=["hour", "temperature"])
 
 # Crear una columna de 'fecha' para agrupar por día
+df_temperatura['hour'] = pd.to_datetime(df_temperatura['hour'], errors='coerce')
 df_temperatura['fecha'] = df_temperatura['hour'].dt.date
 
 # Crear un rango de horas completo para cada día que esté presente en los datos

@@ -7,9 +7,9 @@ services:
     networks:
       - backend_default
     ports:
-      - "8080:80"
+      - "8050:80"
     restart: always
-    
+
 networks:
   backend_default:
     external: true

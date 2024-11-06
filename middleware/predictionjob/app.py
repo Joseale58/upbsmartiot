@@ -275,8 +275,11 @@ try:
     cursor_pg = postgres_conn.cursor()
 
     # Cada vez que se hace una predicción se limpiar la tabla de predicciones
-    truncate_query = f"TRUNCATE TABLE {POSTGRES_TABLE_PREDICTION};"
-    cursor_pg.execute(truncate_query)
+    truncate_query_prediction = f"TRUNCATE TABLE {POSTGRES_TABLE_PREDICTION};"
+    cursor_pg.execute(truncate_query_prediction)
+
+    truncate_query_model_accuracy = f"TRUNCATE TABLE {POSTGRES_TABLE_MODEL_ACCURACY};"
+    cursor_pg.execute(truncate_query_model_accuracy)
 
 
     for _, row in df_futuro_completo.iterrows():

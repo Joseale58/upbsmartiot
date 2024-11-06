@@ -1,6 +1,6 @@
 import psycopg2
 from crate import client
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 
 # Configuraciones de la conexión
@@ -67,6 +67,8 @@ try:
         time_index, temp, humedad = row
         # Convertir el timestamp de milisegundos a un objeto datetime
         timestamp = datetime.fromtimestamp(time_index / 1000.0)
+        # Ajustar la hora de UTC a Bogotá (restando 5 horas)
+        timestamp_bogota = timestamp - timedelta(hours=5)
         insert_temp_query = f"INSERT INTO {POSTGRES_TABLE_TEMPERATURE} (value, timestamp) VALUES (%s,%s)"
         insert_humidity_query = f"INSERT INTO {POSTGRES_TABLE_HUMIDITY} (value, timestamp) VALUES (%s,%s)"
         cursor_pg.execute(insert_temp_query, (temp,timestamp))

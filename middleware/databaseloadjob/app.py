@@ -39,10 +39,12 @@ try:
     cursor_pg.execute(last_date_humidity_query)
     last_date_humidity = cursor_pg.fetchone()[0]
 
-    if last_date_temp < last_date_humidity:
-        last_date = last_date_temp
-    else:
-        last_date = last_date_humidity
+
+    if last_date_temp is not None and last_date_humidity is not None:
+        if last_date_temp < last_date_humidity:
+            last_date = last_date_temp
+        else:
+            print("Error: last_date_temp o last_date_humidity es None")
 
 
     # Conexión a CrateDB

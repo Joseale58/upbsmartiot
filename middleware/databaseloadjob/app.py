@@ -42,18 +42,18 @@ try:
 
     if last_date_temp is not None and last_date_humidity is not None:
         if last_date_temp < last_date_humidity:
-            last_date = last_date_temp
+            last_date = str(last_date_temp)
         else:
-            last_date = last_date_humidity
+            last_date = str(last_date_humidity)
     else:
-        last_date = datetime.now()
+        last_date = str(datetime(2021, 1, 1))
 
 
     # Conexión a CrateDB
     print("Conectando a CrateDB...")
     crate_conn = client.connect(CRATE_URL, error_trace=True)
     cursor_crate = crate_conn.cursor()
-    crate_query = crate_query = f""" SELECT time_index, temp, humedad  FROM doc.etvariables WHERE entity_id = 'Joselito' AND time_index >= '{last_date}' LIMIT 10000; """
+    crate_query = crate_query = f""" SELECT time_index, temp, humedad  FROM doc.etvariables WHERE entity_id = 'Joselito' AND time_index >= TIMESTAMP '{last_date}' LIMIT 10000; """
     cursor_crate.execute(crate_query)
     crate_data = cursor_crate.fetchall()
     

@@ -44,7 +44,9 @@ try:
         if last_date_temp < last_date_humidity:
             last_date = last_date_temp
         else:
-            print("Error: last_date_temp o last_date_humidity es None")
+            last_date = last_date_humidity
+    else:
+        last_date = datetime.now()
 
 
     # Conexión a CrateDB

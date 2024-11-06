@@ -18,8 +18,8 @@ POSTGRES_PORT = "5432"
 POSTGRES_DB = "postgres"
 POSTGRES_USER = "root"
 POSTGRES_PASSWORD = "password"
-POSTGRES_TABLE_TEMPERATURE = "temperature_dummy"
-POSTGRES_TABLE_HUMIDITY = "humidity_dummy"
+POSTGRES_TABLE_TEMPERATURE = "temperature"
+POSTGRES_TABLE_HUMIDITY = "humidity"
 POSTGRES_TABLE_PREDICTION = "prediction"
 POSTGRES_TABLE_MODEL_ACCURACY = "model_accuracy"
 
@@ -68,8 +68,13 @@ try:
     cursor_pg.execute(query_last_temperature)
     last_temperature = cursor_pg.fetchall()
 
+    if
+
     cursor_pg.execute(query_last_humidity)
     last_humidity = cursor_pg.fetchall()
+
+    if last_temperature[0][0] < last_humidity[0][0]:
+        last_date = last_humidity[0][0]
 
     cursor_pg.execute(query_model_accuracy)
     model_accuracy = cursor_pg.fetchall()

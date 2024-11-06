@@ -68,8 +68,6 @@ try:
     cursor_pg.execute(query_last_temperature)
     last_temperature = cursor_pg.fetchall()
 
-    if
-
     cursor_pg.execute(query_last_humidity)
     last_humidity = cursor_pg.fetchall()
 

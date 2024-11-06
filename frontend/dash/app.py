@@ -136,6 +136,26 @@ figura_serie_tiempo_temperatura_prediccion.update_layout(
     template="plotly_white"
 )
 
+figura_serie_tiempo_temperatura_prediccion.add_shape(
+        type="line",
+        x0=min(horas_prediccion),
+        x1=max(horas_prediccion),
+        y0=10,
+        y1=10,
+        line=dict(color="green", width=2, dash="dash"),
+        name='Mínimo (10°C)'
+    )
+
+figura_serie_tiempo_temperatura_prediccion.add_shape(
+        type="line",
+        x0=min(horas_prediccion),
+        x1=max(horas_prediccion),
+        y0=29,
+        y1=29,
+        line=dict(color="red", width=2, dash="dash"),
+        name='Máximo (29°C)'
+)
+
 # Crear figura de predicción de humedad
 figura_serie_tiempo_humedad_prediccion = go.Figure()
 figura_serie_tiempo_humedad_prediccion.add_trace(go.Scatter(
@@ -149,6 +169,27 @@ figura_serie_tiempo_humedad_prediccion.update_layout(
     xaxis_title="Hora",
     yaxis_title="Humedad (%)",
     template="plotly_white"
+)
+
+# Agregar líneas para el mínimo y máximo
+figura_serie_tiempo_humedad_prediccion.add_shape(
+        type="line",
+        x0=min(horas_prediccion),
+        x1=max(horas_prediccion),
+        y0=30,
+        y1=30,
+        line=dict(color="green", width=2, dash="dash"),
+        name='Mínimo (30%)'
+)
+
+figura_serie_tiempo_humedad_prediccion.add_shape(
+        type="line",
+        x0=min(horas_prediccion),
+        x1=max(horas_prediccion),
+        y0=60,
+        y1=60,
+        line=dict(color="red", width=2, dash="dash"),
+        name='Máximo (60%°C)'
 )
 
 # Layout de la aplicación
@@ -292,6 +333,26 @@ def actualizar_visualizacion(fecha_seleccionada):
                                       xaxis_title="Hora",
                                       yaxis_title="Valores",
                                       template="plotly_white")
+    # Agregar líneas para el mínimo y máximo
+    figura_serie_tiempo_temperatura.add_shape(
+        type="line",
+        x0=min(datos['Hora']),
+        x1=max(datos['Hora']),
+        y0=10,
+        y1=10,
+        line=dict(color="green", width=2, dash="dash"),
+        name='Mínimo (10°C)'
+    )
+
+    figura_serie_tiempo_temperatura.add_shape(
+        type="line",
+        x0=min(datos['Hora']),
+        x1=max(datos['Hora']),
+        y0=29,
+        y1=29,
+        line=dict(color="red", width=2, dash="dash"),
+        name='Máximo (29°C)'
+    )
 
     # Crear serie de tiempo para humedad
     figura_serie_tiempo_humedad = go.Figure()
@@ -300,6 +361,27 @@ def actualizar_visualizacion(fecha_seleccionada):
                                       xaxis_title="Hora",
                                       yaxis_title="Valores",
                                       template="plotly_white")
+    
+    # Agregar líneas para el mínimo y máximo
+    figura_serie_tiempo_humedad.add_shape(
+        type="line",
+        x0=min(datos['Hora']),
+        x1=max(datos['Hora']),
+        y0=30,
+        y1=30,
+        line=dict(color="green", width=2, dash="dash"),
+        name='Mínimo (30%)'
+    )
+
+    figura_serie_tiempo_humedad.add_shape(
+        type="line",
+        x0=min(datos['Hora']),
+        x1=max(datos['Hora']),
+        y0=60,
+        y1=60,
+        line=dict(color="red", width=2, dash="dash"),
+        name='Máximo (60%°C)'
+    )
 
     return [gauge_temperatura, gauge_humedad], figura_serie_tiempo_temperatura, figura_serie_tiempo_humedad
 

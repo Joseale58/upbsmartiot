@@ -142,7 +142,7 @@ mape_temp = np.mean(np.abs((test_data - predictions) / test_data)) * 100
 # --- Predicción futura ---
 
 
-# Se reentrena al modelo incluyendo los últimos datos de humedad
+# Se reentrena al modelo incluyendo los últimos datos de temperatura
 forecaster.fit(y=df_completo_temp['temperature'])
 
 # Definir el número de pasos para predecir

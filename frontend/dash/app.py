@@ -13,7 +13,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Planta Dashboard"
 
 # PostgreSQL
-POSTGRES_HOST = "postgres"
+POSTGRES_HOST = "localhost"
 POSTGRES_PORT = "5432"
 POSTGRES_DB = "postgres"
 POSTGRES_USER = "root"
@@ -21,6 +21,7 @@ POSTGRES_PASSWORD = "password"
 POSTGRES_TABLE_TEMPERATURE = "temperature_dummy"
 POSTGRES_TABLE_HUMIDITY = "humidity_dummy"
 POSTGRES_TABLE_PREDICTION = "prediction"
+POSTGRES_TABLE_MODEL_ACCURACY = "model_accuracy"
 
 
 # Consulta a PostgreSQL
@@ -49,6 +50,8 @@ try:
 
     query_last_humidity = f"SELECT date_trunc('hour', timestamp) AS hour_interval, value FROM {POSTGRES_TABLE_HUMIDITY} ORDER BY hour_interval DESC LIMIT 1;"
 
+    query_model_accuracy = f"SELECT model, mape FROM {POSTGRES_TABLE_MODEL_ACCURACY} ORDER BY model;"
+
     cursor_pg.execute(query_humidity)
     humedad = cursor_pg.fetchall()
 
@@ -67,6 +70,9 @@ try:
 
     cursor_pg.execute(query_last_humidity)
     last_humidity = cursor_pg.fetchall()
+
+    cursor_pg.execute(query_model_accuracy)
+    model_accuracy = cursor_pg.fetchall()
 
     # Cerrar el cursor y la conexión
     cursor_pg.close()
@@ -121,7 +127,7 @@ figura_serie_tiempo_temperatura_prediccion.add_trace(go.Scatter(
     name='Predicción Temperatura (°C)'
 ))
 figura_serie_tiempo_temperatura_prediccion.update_layout(
-    title="Predicción - temperatura para mañana",
+    title="Predicción - temperatura",
     xaxis_title="Hora",
     yaxis_title="Temperatura (°C)",
     template="plotly_white"
@@ -136,7 +142,7 @@ figura_serie_tiempo_humedad_prediccion.add_trace(go.Scatter(
     name='Predicción Humedad (%)'
 ))
 figura_serie_tiempo_humedad_prediccion.update_layout(
-    title="Predicción - humedad para mañana",
+    title="Predicción - humedad",
     xaxis_title="Hora",
     yaxis_title="Humedad (%)",
     template="plotly_white"
@@ -199,8 +205,11 @@ tabs = dbc.Tabs([
     # Pestaña 3: Vacía por ahora
     dbc.Tab(label='Predicciones futuras', children=[
         dbc.Container([
-            html.H1("Predicciones para mañana", className="mt-4"),
+            html.H1("Predicciones para: " + str(horas_prediccion[0].strftime("%d-%m-%Y")) , className="mt-4"),
             html.Hr(),
+            html.H3("Calidad de modelos", className="mt-4"),
+            html.P(model_accuracy[0][0] + " MAPE: "+ str(model_accuracy[0][1])[:3] + "%" , className="mt-4"),
+            html.P(model_accuracy[1][0] + " MAPE: "+ str(model_accuracy[1][1])[:4] + "%" , className="mt-4"),
             dcc.Graph(id='time-series-graph-temperatura-prediction', figure=figura_serie_tiempo_temperatura_prediccion, className='mt-4',),
             dcc.Graph(id='time-series-graph-humedad-prediction', figure=figura_serie_tiempo_humedad_prediccion ,className='mt-4')
         ])

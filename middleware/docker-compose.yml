@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: databaseloadjob
     networks:
-      - backend_default
+      - database_default
     ports:
       - "8081:80"
     restart: always
@@ -19,11 +19,11 @@ services:
     depends_on:
       - databaseloadjob
     networks:
-      - backend_default
+      - database_default
     ports:
       - "8082:80"
     restart: always
 
 networks:
-  backend_default:
+  database_default:
     external: true

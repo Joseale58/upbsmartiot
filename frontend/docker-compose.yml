@@ -5,11 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: frontend
     networks:
-      - backend_default
+      - database_default
     ports:
       - "8050:8050"
     restart: always
 
 networks:
-  backend_default:
+  database_default:
     external: true

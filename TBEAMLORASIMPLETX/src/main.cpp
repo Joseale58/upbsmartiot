@@ -1,54 +1,3 @@
-// #include <Arduino.h>
-// #include <SPI.h>
-// #include <LoRa.h>
-
-// #define SCK 5
-// #define MISO 19
-// #define MOSI 27
-// #define SS 18
-// #define RST 23
-// #define DIO 26
-// #define BAND 915E6
-
-// int contador = 0;
-// void setup() {
-//   Serial.begin(115200);
-//   SPI.begin(SCK,MISO,MOSI,SS);
-//   LoRa.setPins(SS,RST,DIO);
-//   if (!LoRa.begin(915E6))
-//   {
-//     Serial.print("No inicio el radio");
-//     while (1);
-//   }
-//   Serial.print("Radio inicializado exitosamente");
-//   LoRa.setFrequency(915E6);
-// }
-
-// void loop() {
-//   int a;
-//   while(LoRa.beginPacket() == 0)
-//   {
-//     Serial.print("esperando por el radio...");
-//     delay(100);
-//   }
-//   Serial.print("enviando data");
-//   Serial.println(contador);
-
-//   LoRa.beginPacket();
-//   Serial.println("incio paquete");
-//   LoRa.print("hola");
-//   Serial.println("escribio hola");
-//   LoRa.print(contador);
-//   Serial.println("incremetno contador");
-//   a = LoRa.endPacket();
-//   if (a) Serial.println("transmision exitosa");
-//   else Serial.println("error de tx");
-//   Serial.println("termino paquete");
-//   contador++;
-
-//   delay(1000);
-// }
-
 // Only supports SX1276/SX1278
 
 #include <LoRa.h>
@@ -156,7 +105,6 @@ void loop()
     Serial.println(counter);
 
     for (int i = 0; i < 10; i++) {
-        Serial.println("Sensor: " + String(counter));
         float temperature = sensor.readTemperature();
         float humidity = sensor.readHumidity();
         delay(100);
@@ -170,9 +118,12 @@ void loop()
     String promedioTemp = String(calcularPromedioTemp());
     String promedioHum = String(calcularPromedioHum());
 
-    delay(100);
+    smartDelay(1000);
 
-    String message = "Joselito${\"lat\": {\"value\":" + String(gps.location.lat(), 6) + "},\"lon\": {\"value\":" + String(gps.location.lng(), 6) + "},\"temp\": {\"value\":" + String(promedioTemp) + "},\"humedad\": {\"value\":" + String(promedioHum) + "}}";
+    String latitud = String(gps.location.lat(), 4);  
+    String longitud = String(gps.location.lng(), 4);  
+
+    String message = "Joselito${\"lat\": {\"value\":" + latitud + "},\"lon\": {\"value\":" + longitud + "},\"temp\": {\"value\":" + String(promedioTemp) + "},\"humedad\": {\"value\":" + String(promedioHum) + "}}";
 
     Serial.println( message);
 
@@ -181,18 +132,26 @@ void loop()
     LoRa.print(message);
     LoRa.endPacket();
 
-    // if (u8g2) {
-    //     char buf[256];
-    //     u8g2->clearBuffer();
-    //     u8g2->drawStr(0, 12, "Transmitting: OK!");
-    //     snprintf(buf, sizeof(buf), "Sending: %d", counter);
-    //     u8g2->drawStr(0, 30, buf);
-    //     u8g2->sendBuffer();
-    // }
     counter++;
-    delay(5000);
+    delay(50000);
+
+
+    // Reinicia el ESP32 cada 10 minutos
+    if(millis() > 600000){
+      ESP.restart();
+    }
 }
 
+//Funciones
+
+void smartDelay(long ms)                
+{
+  unsigned long start = millis();
+  do {
+    while (Serial1.available())
+      gps.encode(Serial1.read());
+  } while (millis() - start < ms);
+}
 
 // Función para calcular el promedio de las medidas
 float calcularPromedioTemp() {

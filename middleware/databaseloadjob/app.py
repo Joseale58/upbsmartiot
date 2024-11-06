@@ -71,8 +71,8 @@ try:
         timestamp_bogota = timestamp - timedelta(hours=5)
         insert_temp_query = f"INSERT INTO {POSTGRES_TABLE_TEMPERATURE} (value, timestamp) VALUES (%s,%s)"
         insert_humidity_query = f"INSERT INTO {POSTGRES_TABLE_HUMIDITY} (value, timestamp) VALUES (%s,%s)"
-        cursor_pg.execute(insert_temp_query, (temp,timestamp))
-        cursor_pg.execute(insert_humidity_query, (humedad,timestamp))
+        cursor_pg.execute(insert_temp_query, (temp,timestamp_bogota))
+        cursor_pg.execute(insert_humidity_query, (humedad,timestamp_bogota))
     # Guardar los cambios definitivamente
     postgres_conn.commit()
     
